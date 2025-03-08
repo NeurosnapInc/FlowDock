@@ -714,7 +714,7 @@ class FlowDockFMLitModule(LightningModule):
         )
         self.esm_model = esm_model.eval().float()
         self.esm_batch_converter = self.esm_alphabet.get_batch_converter()
-        self.esm_model.cpu()
+        self.esm_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
         skip_loading_esmfold_weights = (
             # skip loading ESMFold weights if the template protein structure for a single complex input is provided
@@ -727,7 +727,7 @@ class FlowDockFMLitModule(LightningModule):
             esmfold_model = esm.pretrained.esmfold_v1()
             self.esmfold_model = esmfold_model.eval().float()
             self.esmfold_model.set_chunk_size(self.hparams.cfg.esmfold_chunk_size)
-            self.esmfold_model.cpu()
+            self.esmfold_model.to(torch.device("cuda" if torch.cuda.is_available() else "cpu"))
 
     def predict_step(self, batch: MODEL_BATCH, batch_idx: int, dataloader_idx: int = 0):
         """Perform a single predict step on a batch of data from the predict set.
@@ -754,7 +754,7 @@ class FlowDockFMLitModule(LightningModule):
             self.esm_alphabet,
             self.esm_batch_converter,
             sequences,
-            device="cpu",
+            device=torch.device("cuda" if torch.cuda.is_available() else "cpu"),
             esm_repr_layer=self.hparams.cfg.model.cfg.protein_encoder.esm_repr_layer,
         )
         sequences_to_embeddings = {
